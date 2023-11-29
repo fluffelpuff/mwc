@@ -8,7 +8,7 @@ import (
 
 type ConnChannel struct {
 	net.Conn
-	motherConn  *WrappedCommConnection
+	motherConn  *WrappedConnection
 	Channel     uint8
 	readChannel chan []byte
 	nextBytes   []byte

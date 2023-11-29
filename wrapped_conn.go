@@ -10,7 +10,7 @@ import (
 )
 
 // Stellt eine Wrapped Verbindung dar
-type WrappedCommConnection struct {
+type WrappedConnection struct {
 	writeChannel chan *DataSendPaket
 	wrappedConn  net.Conn
 	active       bool
@@ -20,7 +20,7 @@ type WrappedCommConnection struct {
 }
 
 // Wird ausgeführt wenn die Verbindung geschlossen wurde
-func (o *WrappedCommConnection) killByDisconnect() {
+func (o *WrappedConnection) killByDisconnect() {
 	// Es wird ermittelt ob die Verbindung bereits geschlossen wurde
 	if !o.active {
 		return
@@ -44,7 +44,7 @@ func (o *WrappedCommConnection) killByDisconnect() {
 }
 
 // Wird verwendet wenn ein ungültiger Datensatz empfangen wurde
-func (o *WrappedCommConnection) killInvalidDataRecived() {
+func (o *WrappedConnection) killInvalidDataRecived() {
 	// Es wird ermittelt ob die Verbindung bereits geschlossen wurde
 	if !o.active {
 		return
@@ -68,7 +68,7 @@ func (o *WrappedCommConnection) killInvalidDataRecived() {
 }
 
 // Wird verwendet um die Verbindung zu schließen sollte diese ungültige Daten verwenden
-func (o *WrappedCommConnection) killUnkownChannel() {
+func (o *WrappedConnection) killUnkownChannel() {
 	// Es wird ermittelt ob die Verbindung bereits geschlossen wurde
 	if !o.active {
 		return
@@ -92,7 +92,7 @@ func (o *WrappedCommConnection) killUnkownChannel() {
 }
 
 // Wird verwendet um Daten bis zum letzten auszulesen
-func (o *WrappedCommConnection) readCompleteFramedOrSingleData() ([]byte, error) {
+func (o *WrappedConnection) readCompleteFramedOrSingleData() ([]byte, error) {
 	// Speichert die eingelesen Daten ab
 	readedData := []byte{}
 
@@ -132,7 +132,7 @@ func (o *WrappedCommConnection) readCompleteFramedOrSingleData() ([]byte, error)
 }
 
 // Wird verwendet um Daten zu senden
-func (o *WrappedCommConnection) writeCompleteFrameOrSingleData(data []byte) error {
+func (o *WrappedConnection) writeCompleteFrameOrSingleData(data []byte) error {
 	// Die zu sendenden Daten werden aufgeteilt
 	splitedFrames := splitSlice(data, 2047)
 
@@ -175,7 +175,7 @@ func (o *WrappedCommConnection) writeCompleteFrameOrSingleData(data []byte) erro
 }
 
 // Wird im Hintergrund asugeführt und nimmt eintreffende Daten entgegen
-func (o *WrappedCommConnection) readerRoutine() {
+func (o *WrappedConnection) readerRoutine() {
 	// Signalisiert dass der Reader nicht mehr ausgeführt wird
 	defer o.wGroup.Done()
 
@@ -215,7 +215,7 @@ func (o *WrappedCommConnection) readerRoutine() {
 }
 
 // Wird im Hintergrund ausgeführt und sendet Daten ab
-func (o *WrappedCommConnection) writerRoutine() {
+func (o *WrappedConnection) writerRoutine() {
 	// Signalisiert dass der Writer nicht mehr ausgeführt wird
 	defer o.wGroup.Done()
 
@@ -257,21 +257,21 @@ func (o *WrappedCommConnection) writerRoutine() {
 }
 
 // Öffnet einen neuen Sub Channel
-func (o *WrappedCommConnection) OpenSubConnChannel(channel uint8) (*ConnChannel, error) {
+func (o *WrappedConnection) OpenSubConnChannel(channel uint8) (*ConnChannel, error) {
 	newSubChannel := &ConnChannel{o.wrappedConn, o, channel, make(chan []byte), make([]byte, 0)}
 	o.subChannels[channel] = newSubChannel
 	return newSubChannel, nil
 }
 
 // Setzt die OnClose Event Funktion
-func (o *WrappedCommConnection) AddEventByClose(eventFunction func(string)) {
+func (o *WrappedConnection) AddEventByClose(eventFunction func(string)) {
 	o.onClose = eventFunction
 }
 
 // nimmt eine Verbindung Entgegen und Wrapp diese
-func WrappCommConnection(conn net.Conn) *WrappedCommConnection {
+func WrappConnection(conn net.Conn) *WrappedConnection {
 	// Die Verbindung wird eingefangen
-	revalObject := &WrappedCommConnection{
+	revalObject := &WrappedConnection{
 		wrappedConn:  conn,
 		active:       true,
 		wGroup:       new(sync.WaitGroup),
